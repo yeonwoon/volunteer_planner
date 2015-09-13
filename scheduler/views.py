@@ -1,25 +1,30 @@
+# coding: utf-8
+
 import json
 import datetime
 
 from django.core.urlresolvers import reverse, reverse_lazy
-from django.db.models.aggregates import Sum
-from django.http.response import HttpResponseRedirect, HttpResponse, JsonResponse, Http404
+from django.contrib import messages
+from django.http.response import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.utils.decorators import method_decorator
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, FormView
 from django.views.generic.edit import UpdateView
+
 from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.models import User
-from django.utils.translation import ugettext as _
-from django.db.models import F
+
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Location, Need, Topics, scheduledRegPro
+from django.utils.translation import ugettext_lazy as _
+
+from scheduler.models import scheduledRegPro
+from scheduler.models import Location, Need
 from notifications.models import Notification
 from registration.models import RegistrationProfile
+from scheduler.forms import RegisterForNeedForm
+
 
 class LoginRequiredMixin(object):
-
     @method_decorator(login_required())
     def dispatch(self, *args, **kwargs):
         return super(LoginRequiredMixin, self).dispatch(*args, **kwargs)
@@ -35,110 +40,88 @@ class HomeView(TemplateView):
         return self.render_to_response(context)
 
     def get_context_data(self, **kwargs):
-
-        if 'locations' not in kwargs:
-            kwargs['locations'] = Location.objects.all()
-
-        if 'notifications' not in kwargs:
-            kwargs['notifications'] = Notification.objects.all()
-
-        if 'statistics' not in kwargs:
-            kwargs['statistics'] = Location.objects.all()
-
-        return kwargs
+        context = super(HomeView, self).get_context_data(**kwargs)
+        context['locations'] = Location.objects.all()
+        context['notifications'] = Notification.objects.all()
+        return context
 
 
-@login_required
-def helpdesk(request):
-    response = {}
-    response['locations'] = Location.objects.all()
-    response['notifications'] = Notification.objects.all()
-    if request.user.has_perm('scheduler.can_checkin'):
-        response['can_checkin'] = True
-        print 'hello'
-    else:
-        response['can_checkin'] = False
-    return render(request, 'helpdesk.html', response)
-
-
-
-class ProfileView(UpdateView):
-    model = User
-    fields = ['first_name', 'last_name', 'email']
-    template_name = "profile_edit.html"
-    success_url = reverse_lazy('profile_edit')
-
-    def get_object(self, queryset=None):
-        """
-        Returns the object the view is displaying.
-
-        By default this requires `self.queryset` and a `pk` or `slug` argument
-        in the URLconf, but subclasses can override this to return any object.
-        """
-        # Use a custom queryset if provided; this is required for subclasses
-        # like DateDetailView
-        if queryset is None:
-            queryset = self.get_queryset()
-
-        # Next, try looking up by primary key.
-        pk = self.request.user.pk
-        if pk is not None:
-            queryset = queryset.filter(pk=pk)
-
-        try:
-            # Get the single item from the filtered queryset
-            obj = queryset.get()
-        except queryset.model.DoesNotExist:
-            raise Http404(_("No %(verbose_name)s found matching the query") %
-                          {'verbose_name': queryset.model._meta.verbose_name})
-        return obj
-
-
-class PlannerView(LoginRequiredMixin, TemplateView):
-    template_name = "helpdesk_single.html"
+class HelpDesk(LoginRequiredMixin, TemplateView):
+    """
+    Location overview. First view that a volunteer gets redirected to when they log in.
+    """
+    template_name = "helpdesk.html"
 
     def get_context_data(self, **kwargs):
-        if 'needs' not in kwargs:
-            kwargs['needs'] = Need.objects.filter(location__pk=self.kwargs['pk'])\
-                .filter(time_period_to__date_time__year=self.kwargs['year'],
-                        time_period_to__date_time__month=self.kwargs['month'],
-                        time_period_to__date_time__day=self.kwargs['day'])\
-                .order_by('topic', 'time_period_to__date_time')
-        return kwargs
+        context = super(HelpDesk, self).get_context_data(**kwargs)
+        locations = context['locations'] = Location.objects.all()
+        the_dates = [{loc: loc.get_dates_of_needs()} for loc in locations]
+        context['need_dates_by_location'] = the_dates
+        context['notifications'] = Notification.objects.all()
+        return context
 
 
-@login_required
-def register_for_need(request):
-    if request.method == "POST" and request.is_ajax:
-        need_id = int(request.POST['id_need'])
-        registration_profile = RegistrationProfile.objects.get(user=request.user.pk)
-        need = Need.objects.get(id=need_id)
-        scheduled_reg_profile = scheduledRegPro(
-            registration_profile = registration_profile,
-            need = need
-        )
-        scheduled_reg_profile.save()
+class ProfileView(LoginRequiredMixin, UpdateView):
+    """
+    Allows a user to update their profile.
 
-        return HttpResponse(json.dumps({"data": "ok"}), content_type="application/json")
-    else:
-        pass
+    Maik isn't sure if this is linked to from anywhere. The template looks nasty.
+    """
+    fields = ['first_name', 'last_name', 'email']
+    template_name = "profile_edit.html"
+    success_url = reverse_lazy('helpdesk')
+
+    def get_object(self, queryset=None):
+        return self.request.user
 
 
-@login_required
-def de_register_for_need(request):
-    if request.method == "POST" and request.is_ajax:
-        need_id = int(request.POST['id_need'])
-        registration_profile = RegistrationProfile.objects.get(user=request.user.pk)
-        need = Need.objects.get(id=need_id)
-        scheduled_reg_profile = scheduledRegPro.objects.get(
-            registration_profile = registration_profile,
-            need = need
-        )
-        scheduled_reg_profile.delete()
+class PlannerView(LoginRequiredMixin, FormView):
+    """
+    View that gets shown to volunteers when they browse a specific day.
+    It'll show all the available needs, and they can add and remove
+    themselves from needs.
+    """
+    template_name = "helpdesk_single.html"
+    form_class = RegisterForNeedForm
 
-        return HttpResponse(json.dumps({"data": "ok"}), content_type="application/json")
-    else:
-        pass
+    def get_context_data(self, **kwargs):
+        context = super(PlannerView, self).get_context_data(**kwargs)
+        context['needs'] = Need.objects.filter(location__pk=self.kwargs['pk']) \
+            .filter(time_period_to__date_time__year=self.kwargs['year'],
+                    time_period_to__date_time__month=self.kwargs['month'],
+                    time_period_to__date_time__day=self.kwargs['day']) \
+            .order_by('topic', 'time_period_to__date_time')
+        return context
+
+    def form_invalid(self, form):
+        messages.warning(self.request, _(u'The submitted data was invalid.'))
+        return super(PlannerView, self).form_invalid(form)
+
+    def form_valid(self, form):
+        reg_profile = self.request.user.registrationprofile
+        need = form.cleaned_data['need']
+        if form.cleaned_data['action'] == RegisterForNeedForm.ADD:
+            conflicts = need.get_conflicting_needs(reg_profile.needs.all())
+            if conflicts:
+                conflicts_string = u", ".join(u'{}'.format(conflict) for conflict in conflicts)
+                messages.warning(self.request,
+                                 _(
+                                     u'We can\'t add you to this shift because you\'ve already agreed to other shifts at the same time: {conflicts}'.format(
+                                         conflicts=
+                                         conflicts_string)))
+            else:
+                messages.success(self.request, _(u'You were successfully added to this shift.'))
+                reg_profile.needs.add(need)
+        elif form.cleaned_data['action'] == RegisterForNeedForm.REMOVE:
+            reg_profile.needs.remove(need)
+        reg_profile.save()
+        return super(PlannerView, self).form_valid(form)
+
+    def get_success_url(self):
+        """
+        Redirect to the same page.
+        """
+        return reverse('planner_by_location', kwargs=self.kwargs)
 
 
 @login_required(login_url='/auth/login/')
@@ -155,6 +138,7 @@ def volunteer_list(request, **kwargs):
     if request.GET.get('type') == 'json':
         return JsonResponse(data, safe=False)
     return render(request, 'volunteer_list.html', {'data': json.dumps(data), 'location': loc, 'today': today})
+
 
 @login_required(login_url='/auth/login/')
 @permission_required('scheduler.can_checkin')
@@ -188,8 +172,8 @@ def volunteer_checkin_list(request, **kwargs):
 def checkin_volunteer(request):
     shift_id = int(request.POST.get('shift'))
     regpro_id = int(request.POST.get('regpro'))
-    srp = scheduledRegPro.objects.get(need_id=shift_id,registration_profile_id=regpro_id)
+    srp = scheduledRegPro.objects.get(need_id=shift_id, registration_profile_id=regpro_id)
     srp.did_show_up = True
     srp.save()
 
-    return JsonResponse({},status=200)
+    return JsonResponse({}, status=200)

@@ -1,10 +1,10 @@
 from .base import *
 
-DEBUG = False if not 'BETA' in os.environ else True
+DEBUG = os.environ.get('BETA', False)
 
 TEMPLATE_DEBUG = False
 
-STATIC_ROOT = '/var/www/volunteer/static'
+STATIC_ROOT = os.environ['STATIC_ROOT']
 
 TEMPLATE_LOADERS = (
     (
@@ -14,10 +14,12 @@ TEMPLATE_LOADERS = (
         )
     ),
 )
-PREPEND_WWW = True if not 'BETA' in os.environ else False
+
+# Let this be done by frontend reverse proxy, if required!
+PREPEND_WWW = False
 
 ADMINS = (
-    ('Dorian Cantzen', 'cantzen@googlemail.com'),
+    ('VP Admin', 'vp-admin@volunteer-planner.org'),
 )
 
 DATABASES = {
