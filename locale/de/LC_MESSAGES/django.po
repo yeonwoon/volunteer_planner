@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-09-14 10:29+0200\n"
+"POT-Creation-Date: 2015-09-14 12:15+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,7 +22,7 @@ msgstr ""
 msgid "Save"
 msgstr "Speichern"
 
-#: account/templates/user_detail.html:14 registration/forms.py:34
+#: account/templates/user_detail.html:14 registration/forms.py:33
 msgid "Username"
 msgstr "Benutzername"
 
@@ -34,9 +34,9 @@ msgstr "Vorname"
 msgid "Last name"
 msgstr "Nachname"
 
-#: account/templates/user_detail.html:17 registration/forms.py:37
-msgid "Email"
-msgstr "E-Mail Adresse"
+#: account/templates/user_detail.html:17 registration/forms.py:41
+msgid "Email address"
+msgstr "E-Mailadresse"
 
 #: account/templates/user_detail.html:19
 msgid "Edit Account"
@@ -66,35 +66,35 @@ msgstr "Aktivierungsmail erneut versenden"
 msgid "This value may contain only letters, numbers and @/./+/-/_ characters."
 msgstr "Der Wert darf nur Buchstaben, Zahlen und die Zeichen @, ., +, - und _ enthalten"
 
-#: registration/forms.py:39
+#: registration/forms.py:44
 msgid "Password"
 msgstr "Passwort"
 
-#: registration/forms.py:41
+#: registration/forms.py:46
 msgid "Password (again)"
 msgstr "Passwort (noch einmal)"
 
-#: registration/forms.py:51
+#: registration/forms.py:58
 msgid "A user with that username already exists."
 msgstr "Es gibt bereits einen Benutzer mit diesem Benutzernamen."
 
-#: registration/forms.py:58
+#: registration/forms.py:66
 msgid "A user with that email already exists. Please login instead."
 msgstr "Die Emailadresse ist bereits bekannt. Bitte logge Dich ein mit Deinem Benutzername und Password."
 
-#: registration/forms.py:82
+#: registration/forms.py:92
 msgid "I have read and agree to the Terms of Service"
 msgstr "Ich habe die Nutzungsbedingungen gelesen und stimme ihnen zu"
 
-#: registration/forms.py:83
+#: registration/forms.py:94
 msgid "You must agree to the terms to register"
 msgstr "Sie müssen den Nutzungsbedingungen zustimmen"
 
-#: registration/forms.py:99
+#: registration/forms.py:112
 msgid "This email address is already in use. Please supply a different email address."
 msgstr "Diese E-Mail Adresse ist bereits registriert. Bitte verwenden Sie eine andere E-Mail Adresse"
 
-#: registration/forms.py:124
+#: registration/forms.py:138
 msgid "Registration using free email addresses is prohibited. Please supply a different email address."
 msgstr "Die Registrierung mit einer E-Mail-Adresses dieses Anbieters ist leider verboten. Bitte verwende eine andere E-Mail-Adresse."
 
@@ -123,68 +123,68 @@ msgstr "Benutzername und Passort ungültig. Bitte versuchen Sie es erneut."
 msgid "Scheduler"
 msgstr "Schichtplaner"
 
-#: scheduler/models.py:17
+#: scheduler/models.py:19
 msgid "shift"
 msgstr "Schicht"
 
-#: scheduler/models.py:18
+#: scheduler/models.py:20
 msgid "shifts"
 msgstr "Schichten"
 
-#: scheduler/models.py:20 scheduler/models.py:90
+#: scheduler/models.py:22 scheduler/models.py:101
 msgid "helptype"
 msgstr "Hilfebereich"
 
-#: scheduler/models.py:20
+#: scheduler/models.py:22
 msgid "helptype_text"
 msgstr "Jeder Hilfebereich hat so viele Planelemente wie es Arbeitsschichten geben soll. Dies ist EINE Arbeitsschicht für einen bestimmten Tag"
 
-#: scheduler/models.py:21 scheduler/models.py:125
+#: scheduler/models.py:23 scheduler/models.py:136
 msgid "location"
 msgstr "Ort"
 
-#: scheduler/models.py:24
+#: scheduler/models.py:26
 msgid "time from"
 msgstr "Anfangszeit"
 
-#: scheduler/models.py:29
+#: scheduler/models.py:31
 msgid "number of needed volunteers"
 msgstr "Anz. benötigter Freiwillige"
 
-#: scheduler/models.py:34
+#: scheduler/models.py:36
 msgid "assigned volunteers"
 msgstr "Reg. Freiwillige"
 
-#: scheduler/models.py:39
+#: scheduler/models.py:41
 msgid "volunteers"
 msgstr "Freiwillige"
 
-#: scheduler/models.py:91
+#: scheduler/models.py:102
 msgid "helptypes"
 msgstr "Hilfebereiche"
 
-#: scheduler/models.py:106
+#: scheduler/models.py:117
 msgid "timeperiod"
 msgstr "Zeitspanne"
 
-#: scheduler/models.py:107
+#: scheduler/models.py:118
 msgid "timeperiods"
 msgstr "Zeitspannen"
 
-#: scheduler/models.py:126
+#: scheduler/models.py:137
 msgid "locations"
 msgstr "Orte"
 
-#: scheduler/views.py:79
+#: scheduler/views.py:80
 msgid "The submitted data was invalid."
 msgstr "Die eingegebenen Daten sind ungültig."
 
-#: scheduler/views.py:90
+#: scheduler/views.py:93
 #, python-brace-format
 msgid "We can't add you to this shift because you've already agreed to other shifts at the same time: {conflicts}"
 msgstr "Sie können der Schicht nicht beitreten, da Sie bereits an anderen mit überschneidenden Zeiten teilnehmen: {conflicts}"
 
-#: scheduler/views.py:93
+#: scheduler/views.py:98
 msgid "You were successfully added to this shift."
 msgstr "Sie haben sich erfolgreich für die Schicht angemeldet."
 
