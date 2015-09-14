@@ -3,16 +3,12 @@
 import json
 import datetime
 
-from django.core.urlresolvers import reverse, reverse_lazy
+from django.core.urlresolvers import reverse
 from django.contrib import messages
 from django.http.response import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404
-from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView, FormView
-from django.views.generic.edit import UpdateView
-
 from django.contrib.auth.decorators import login_required, permission_required
-
 from django.views.decorators.csrf import csrf_exempt
 
 from django.utils.translation import ugettext_lazy as _
@@ -21,13 +17,9 @@ from scheduler.models import scheduledRegPro
 from scheduler.models import Location, Need
 from notifications.models import Notification
 from registration.models import RegistrationProfile
-from scheduler.forms import RegisterForNeedForm
-
-
-class LoginRequiredMixin(object):
-    @method_decorator(login_required())
-    def dispatch(self, *args, **kwargs):
-        return super(LoginRequiredMixin, self).dispatch(*args, **kwargs)
+from stats.models import ValueStore
+from .forms import RegisterForNeedForm
+from volunteer_planner.utils import LoginRequiredMixin
 
 
 class HomeView(TemplateView):
@@ -43,6 +35,11 @@ class HomeView(TemplateView):
         context = super(HomeView, self).get_context_data(**kwargs)
         context['locations'] = Location.objects.all()
         context['notifications'] = Notification.objects.all()
+        try:
+            context['working_hours'] = ValueStore.objects.get(
+                name="total-volunteer-hours")
+        except ValueStore.DoesNotExist:
+            context['working_hours'] = ""
         return context
 
 
@@ -59,20 +56,6 @@ class HelpDesk(LoginRequiredMixin, TemplateView):
         context['need_dates_by_location'] = the_dates
         context['notifications'] = Notification.objects.all()
         return context
-
-
-class ProfileView(LoginRequiredMixin, UpdateView):
-    """
-    Allows a user to update their profile.
-
-    Maik isn't sure if this is linked to from anywhere. The template looks nasty.
-    """
-    fields = ['first_name', 'last_name', 'email']
-    template_name = "profile_edit.html"
-    success_url = reverse_lazy('helpdesk')
-
-    def get_object(self, queryset=None):
-        return self.request.user
 
 
 class PlannerView(LoginRequiredMixin, FormView):
@@ -103,14 +86,16 @@ class PlannerView(LoginRequiredMixin, FormView):
         if form.cleaned_data['action'] == RegisterForNeedForm.ADD:
             conflicts = need.get_conflicting_needs(reg_profile.needs.all())
             if conflicts:
-                conflicts_string = u", ".join(u'{}'.format(conflict) for conflict in conflicts)
+                conflicts_string = u", ".join(
+                    u'{}'.format(conflict) for conflict in conflicts)
                 messages.warning(self.request,
                                  _(
                                      u'We can\'t add you to this shift because you\'ve already agreed to other shifts at the same time: {conflicts}'.format(
                                          conflicts=
                                          conflicts_string)))
             else:
-                messages.success(self.request, _(u'You were successfully added to this shift.'))
+                messages.success(self.request, _(
+                    u'You were successfully added to this shift.'))
                 reg_profile.needs.add(need)
         elif form.cleaned_data['action'] == RegisterForNeedForm.REMOVE:
             reg_profile.needs.remove(need)
@@ -132,12 +117,15 @@ def volunteer_list(request, **kwargs):
     """
     today = datetime.date.today()
     loc = get_object_or_404(Location, id=kwargs.get('loc_pk'))
-    needs = Need.objects.filter(location=loc, time_period_to__date_time__contains=today)
-    data = list(RegistrationProfile.objects.filter(needs__in=needs).distinct().values_list('user__email', flat=True))
+    needs = Need.objects.filter(location=loc,
+                                time_period_to__date_time__contains=today)
+    data = list(RegistrationProfile.objects.filter(
+        needs__in=needs).distinct().values_list('user__email', flat=True))
     # add param ?type=json in url to get JSON data
     if request.GET.get('type') == 'json':
         return JsonResponse(data, safe=False)
-    return render(request, 'volunteer_list.html', {'data': json.dumps(data), 'location': loc, 'today': today})
+    return render(request, 'volunteer_list.html',
+                  {'data': json.dumps(data), 'location': loc, 'today': today})
 
 
 @login_required(login_url='/auth/login/')
@@ -148,7 +136,8 @@ def volunteer_checkin_list(request, **kwargs):
     """
     today = datetime.date.today()
     loc = get_object_or_404(Location, id=kwargs.get('loc_pk'))
-    needs = Need.objects.filter(location=loc, time_period_to__date_time__contains=today)
+    needs = Need.objects.filter(location=loc,
+                                time_period_to__date_time__contains=today)
 
     shifts = []
 
@@ -163,7 +152,8 @@ def volunteer_checkin_list(request, **kwargs):
 
         shifts.append(shift)
 
-    return render(request, 'volunteer_checkin_list.html', {'shifts': shifts, 'location': loc, 'today': today})
+    return render(request, 'volunteer_checkin_list.html',
+                  {'shifts': shifts, 'location': loc, 'today': today})
 
 
 @login_required(login_url='/auth/login/')
@@ -172,7 +162,8 @@ def volunteer_checkin_list(request, **kwargs):
 def checkin_volunteer(request):
     shift_id = int(request.POST.get('shift'))
     regpro_id = int(request.POST.get('regpro'))
-    srp = scheduledRegPro.objects.get(need_id=shift_id, registration_profile_id=regpro_id)
+    srp = scheduledRegPro.objects.get(need_id=shift_id,
+                                      registration_profile_id=regpro_id)
     srp.did_show_up = True
     srp.save()
 
