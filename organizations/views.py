@@ -110,6 +110,7 @@ class ShiftCreateView(ShiftViewMembershipsRequiredMixin, CreateView):
         data = super(ShiftCreateView, self).get_context_data(**kwargs)
         data.update({'task_form': self.get_form(),
                      'shift_formset': self.get_formset(),
+                     'is_createview': True,
                      'title': 'Create new shift',
                      'submit_btn_text': 'Create'})
         return data

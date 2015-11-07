@@ -34,10 +34,9 @@
     {{ shift_formset.management_form }}
 
     {% for shift_form in shift_formset %}
-        <div class="form-group">
-        {% for field in shift_form %}
+        <div class="formset form-group{% if forloop.counter > 3 and not shift_form.errors and not shift_form.cleaned_data %} hidden{% endif %}">
+        {% for field in shift_form.visible_fields %}
             <div class="col-xs-3{% if field.errors %} has-error has-feedback{% endif %}">
-            {% if not field.is_hidden %}
                 <small>{{ field.label_tag }}</small> {{ field }}
                 {% if field.errors %}
                     <div class="control-label">
@@ -48,13 +47,31 @@
                 {% if field.help_text %}
                     <div class="control-label help">{{ field.help_text|safe }}</div>
                 {% endif %}
-            {% endif %}
             </div>
         {% endfor %}
         </div>
-        <hr />
     {% endfor %}
     </fieldset>
+
+    {% if is_createview %}
+    <div class="form-group text-right">
+        <div class="col-xs-12">
+            <script>
+            function add_more_shifts() {
+                num_items_to_reveal = 3;
+                for (i=0; i<num_items_to_reveal; i++) {
+                    $('.formset.hidden').first().removeClass('hidden')
+                }
+                if ($('.formset.hidden').length == 0) {
+                    $('#add3').remove();
+                }
+            }
+            </script>
+            <a href="" id="add3" onclick="add_more_shifts();return false;"><i class="fa fa-plus-circle fa-lg" style="color: green;"></i>
+            </a>
+        </div>
+    </div>
+    {% endif %}
 
     {# --- submit/cancel buttons --- #}
     <div class="form-group text-right">

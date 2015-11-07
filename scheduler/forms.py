@@ -42,6 +42,6 @@ class TaskForm(forms.ModelForm):
         }
 
 ShiftFormSet = forms.inlineformset_factory(Task, Shift,
-                                           form=ShiftForm, extra=2,
+                                           form=ShiftForm, extra=99,
                                            min_num=1, validate_min=True,
                                            can_delete=False)
