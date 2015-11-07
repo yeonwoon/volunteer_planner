@@ -24,7 +24,8 @@ class ShiftForm(forms.ModelForm):
                                                   'placeholder': 'YYYY-MM-DD HH:MM'}),
             'ending_time': forms.DateTimeInput({'class': 'form-control',
                                                 'placeholder': 'YYYY-MM-DD HH:MM'}),
-            'slots': forms.NumberInput({'class': 'form-control'}),
+            'slots': forms.NumberInput({'class': 'form-control',
+                                        'min': 1}),
         }
 
 class TaskForm(forms.ModelForm):
