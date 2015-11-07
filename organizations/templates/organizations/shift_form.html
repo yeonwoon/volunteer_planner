@@ -75,8 +75,10 @@
 
     {# --- submit/cancel buttons --- #}
     <div class="form-group text-right">
-        <input class="btn btn-primary" type="submit" value="{{ submit_btn_text }}" name="save" />
-        <a class="btn btn-default" href="{% url 'shift_management' %}" role="button">Cancel</a>
+        <div class="col-xs-12">
+            <input class="btn btn-primary" type="submit" value="{{ submit_btn_text }}" name="save" />
+            <a class="btn btn-default" href="{% url 'shift_management' %}" role="button">Cancel</a>
+        </div>
     </div>
 </form>
 
