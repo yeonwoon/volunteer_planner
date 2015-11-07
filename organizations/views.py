@@ -13,12 +13,11 @@ from django.utils.decorators import method_decorator
 from django.db import transaction
 
 from organizations.admin import get_cached_memberships, filter_queryset_by_membership
-from organizations.models import Task
+from organizations.models import Task, Organization, Facility
 from scheduler.models import Shift
 from scheduler.forms import TaskForm, ShiftForm, ShiftFormSet
 from news.models import NewsEntry
 from google_tools.templatetags.google_links import google_maps_directions
-from .models import Organization, Facility
 from volunteer_planner.utils import LoginRequiredMixin
 
 
@@ -91,6 +90,15 @@ class ShiftCreateView(ShiftViewMembershipsRequiredMixin, CreateView):
         formset.save()
 
         return super(ShiftCreateView, self).form_valid(form)
+
+    def get_form(self, form_class):
+        form = super(ShiftCreateView, self).get_form(form_class)
+
+        # select facilities that user has admin or manager right.
+        if self.request:
+            _, users_facility_membership = get_cached_memberships(self.request.user)
+            form.fields['facility'].queryset = Facility.objects.filter(id__in=users_facility_membership)
+        return form
 
     def get_formset(self):
         if self.request.method == 'POST':
