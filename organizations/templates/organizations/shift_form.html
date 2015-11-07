@@ -8,11 +8,11 @@
 <h1 class="">{{ title }}</h1>
 <hr />
 
-<form style="width: 75%" action="" method="post">{% csrf_token %}
-
+<form style="width: 75%" class="form-horizontal" action="" method="post">{% csrf_token %}
+    <fieldset>
     {# --- Task fields --- #}
     {% for field in task_form %}
-        <div class="row form-group{% if field.errors %} has-error has-feedback{% endif %}">
+        <div class="form-group{% if field.errors %} has-error has-feedback{% endif %}">
             <div class="col-xs-12">
             {{ field.label_tag }}
             {% if field.errors %}
@@ -28,14 +28,13 @@
             </div>
         </div>
     {% endfor %}
-
     <hr />
 
     {# --- Shift fields --- #}
     {{ shift_formset.management_form }}
 
     {% for shift_form in shift_formset %}
-        <div class="row form-group">
+        <div class="form-group">
         {% for field in shift_form %}
             <div class="col-xs-3{% if field.errors %} has-error has-feedback{% endif %}">
             {% if not field.is_hidden %}
@@ -53,12 +52,12 @@
             </div>
         {% endfor %}
         </div>
+        <hr />
     {% endfor %}
-
-    <hr />
+    </fieldset>
 
     {# --- submit/cancel buttons --- #}
-    <div class="row form-group text-right">
+    <div class="form-group text-right">
         <input class="btn btn-primary" type="submit" value="{{ submit_btn_text }}" name="save" />
         <a class="btn btn-default" href="{% url 'shift_management' %}" role="button">Cancel</a>
     </div>
